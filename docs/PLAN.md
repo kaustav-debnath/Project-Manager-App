@@ -55,11 +55,11 @@ Build the frontend MVP as a NextJS app in `frontend/`.
 
 ---
 
-## Part 3: Scaffolding
+## Part 3: Scaffolding -- COMPLETE
 
 Set up Docker, FastAPI backend, start/stop scripts. Serve example static HTML to confirm hello world works and make an API call.
 
-## Part 4: Add Frontend to Backend
+## Part 4: Add Frontend to Backend -- COMPLETE
 
 Statically build NextJS and serve from FastAPI at /. Comprehensive tests.
 

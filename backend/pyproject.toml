@@ -1,0 +1,9 @@
+[project]
+name = "omniroute-backend"
+version = "0.1.0"
+description = "FastAPI backend for the OmniRoute Project Management MVP"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi",
+    "uvicorn",
+]

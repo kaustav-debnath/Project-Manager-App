@@ -2,3 +2,15 @@
 
 .env
 backend/__pycache__/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+
+# macOS
+.DS_Store
+
+# Local backend PID
+.backend.pid

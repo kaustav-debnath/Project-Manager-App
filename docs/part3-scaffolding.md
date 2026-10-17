@@ -15,34 +15,35 @@ Set up the Python FastAPI backend packaged in Docker, start/stop scripts for Mac
 - Docker container packaging everything
 
 ## Phase 1: Backend Scaffold
-- [ ] Create `backend/pyproject.toml` defining `fastapi` and `uvicorn` deps via `uv`
-- [ ] Create `backend/main.py` FastAPI app:
+- [x] Create `backend/pyproject.toml` defining `fastapi` and `uvicorn` deps via `uv`
+- [x] Create `backend/main.py` FastAPI app:
   - `GET /` -> example static HTML (hello world page)
   - `GET /api/hello` -> JSON response (API call check)
-- [ ] Create `.env` at project root with `OPENROUTER_API_KEY`
+- [x] Create `.env` at project root with `OPENROUTER_API_KEY`
+- [x] Create multiple backend py files for each functionality
 
 ## Phase 2: Docker
-- [ ] Create `Dockerfile` at project root using Python slim image, `uv sync --frozen`, run `uvicorn`
-- [ ] Confirm `docker build` succeeds
-- [ ] Confirm container runs and serves hello world at `http://localhost:8000/`
-- [ ] Confirm `http://localhost:8000/api/hello` returns JSON
+- [x] Create `Dockerfile` at project root using Python slim image, `uv sync --frozen`, run `uvicorn`
+- [x] Confirm `docker build` succeeds
+- [x] Confirm container runs and serves hello world at `http://localhost:8000/`
+- [x] Confirm `http://localhost:8000/api/hello` returns JSON
 
 ## Phase 3: Start/Stop Scripts (in `scripts/`)
-- [ ] `scripts/start-mac.sh` — start backend (Docker or local) on Mac
-- [ ] `scripts/start-linux.sh` — start backend on Linux
-- [ ] `scripts/start-windows.bat` — start backend on Windows
-- [ ] `scripts/stop-mac.sh` — stop backend on Mac
-- [ ] `scripts/stop-linux.sh` — stop backend on Linux
-- [ ] `scripts/stop-windows.bat` — stop backend on Windows
-- Scripts start/stop the FastAPI backend and confirm it's reachable
+- [x] `scripts/start-mac.sh` — start backend (Docker or local) on Mac
+- [x] `scripts/start-linux.sh` — start backend on Linux
+- [x] `scripts/start-windows.bat` — start backend on Windows
+- [x] `scripts/stop-mac.sh` — stop backend on Mac
+- [x] `scripts/stop-linux.sh` — stop backend on Linux
+- [x] `scripts/stop-windows.bat` — stop backend on Windows
+- [x] Scripts start/stop the FastAPI backend and confirm it's reachable
 
 ## Phase 4: Verification
-- [ ] Hello world static HTML served at `/`
-- [ ] API call to `/api/hello` returns JSON
-- [ ] Backend starts via scripts on Mac and Linux (Windows script authored)
-- [ ] Project root `.env` contains `OPENROUTER_API_KEY`
-- [ ] `backend/CLAUDE.md` updated with backend description
-- [ ] All Part 3 files committed to git
+- [x] Hello world static HTML served at `/`
+- [x] API call to `/api/hello` returns JSON
+- [x] Backend starts via scripts on Mac and Linux (Windows script authored)
+- [x] Project root `.env` contains `OPENROUTER_API_KEY`
+- [x] `backend/CLAUDE.md` updated with backend description
+- [x] All Part 3 files committed to git
 
 ## Success Criteria
 - FastAPI backend runs inside a Docker container built with `uv`
