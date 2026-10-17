@@ -2,7 +2,12 @@ import { test, expect } from "@playwright/test";
 
 test.describe("Kanban Board MVP", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/");
+    // Login before each test so the board is accessible
+    await page.goto("/login");
+    await page.getByPlaceholder("user").fill("user");
+    await page.getByPlaceholder("password").fill("password");
+    await page.getByRole("button", { name: "Sign In" }).click();
+    await expect(page).toHaveURL("/");
   });
 
   test("renders the single board with 5 default columns and dummy cards", async ({

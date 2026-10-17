@@ -12,6 +12,15 @@ const nextConfig: NextConfig = {
       },
     },
   },
+  // Proxy API requests to backend during development
+  async rewrites() {
+    return [
+      {
+        source: "/api/:path*",
+        destination: "http://localhost:8001/api/:path*", // Proxy to backend
+      },
+    ];
+  },
 };
 
 export default nextConfig;

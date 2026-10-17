@@ -14,3 +14,7 @@ __pycache__/
 
 # Local backend PID
 .backend.pid
+
+# Python
+__pycache__/
+*.py[cod]
