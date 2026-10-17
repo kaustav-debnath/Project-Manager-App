@@ -1,37 +1,92 @@
-# High level steps for project
+# Project Management MVP - Master Plan
 
-Part 1: Plan
+## Part 1: Plan -- COMPLETE
 
-Enrich this document to plan out each of these parts in detail, with substeps listed out as a checklist to be checked off by the agent, and with tests and success critieria for each. Also create an AGENTS.md file inside the frontend directory that describes the existing code there. Ensure the user checks and approves the plan.
+Enriched planning document with detailed substeps and success criteria.
 
-Part 2: Scaffolding
+## Part 2: Frontend Build -- COMPLETE
 
-Set up the Docker infrastructure, the backend in backend/ with FastAPI, and write the start and stop scripts in the scripts/ directory. This should serve example static HTML to confirm that a 'hello world' example works running locally and also make an API call.
+Build the frontend MVP as a NextJS app in `frontend/`.
 
-Part 3: Add in Frontend
+### Technology Choices
+- NextJS (latest, client-rendered)
+- @dnd-kit for drag and drop
+- Tailwind CSS for styling
+- React Context + useReducer for state
+- Vitest + React Testing Library for unit tests
+- Playwright for integration tests
 
-Now update so that the frontend is statically built and served, so that the app has the demo Kanban board displayed at /. Comprehensive unit and integration tests.
+### Phase 1: Project Scaffolding
+- [x] Create NextJS app with TypeScript + Tailwind CSS
+- [x] Install @dnd-kit, Vitest, Playwright
+- [x] Configure Tailwind custom colors and Vitest/Playwright
+- [x] Add .gitignore and README.md
 
-Part 4: Add in a fake user sign in experience
+### Phase 2: Data Model and State Management
+- [x] Define types (Card, Column, Board)
+- [x] Create dummy data (5 columns with sample cards)
+- [x] Create BoardContext with useReducer (MOVE_CARD, ADD_CARD, DELETE_CARD, EDIT_CARD, RENAME_COLUMN)
+- [x] Unit tests for the reducer
 
-Now update so that on first hitting /, you need to log in with dummy credentials ("user", "password") in order to see the Kanban, and you can log out. Comprehensive tests.
+### Phase 3: Core UI Components
+- [x] BoardHeader, Column, Card, CardModal, Board components
+- [x] Apply color scheme throughout
+- [x] Unit tests for each component
 
-Part 5: Database modeling
+### Phase 4: Drag and Drop
+- [x] Integrate @dnd-kit for cross-column card movement
+- [x] Reorder within column, visual feedback during drag
+- [x] Unit tests
 
-Now propose a database schema for the Kanban, saving it as JSON. Document the database approach in docs/ and get user sign off.
+### Phase 5: Card CRUD Operations
+- [x] Add card, edit card, delete card, rename column
+- [x] Unit tests for each operation
 
-Part 6: Backend
+### Phase 6: UI Polish
+- [x] Responsive layout, transitions, hover states
+- [x] Empty column state, card counts, keyboard accessibility
 
-Now add API routes to allow the backend to read and change the Kanban for a given user; test this thoroughly with backend unit tests. The database should be created if it doesn't exist.
+### Phase 7: Integration Testing (Playwright)
+- [x] Test all key flows end-to-end
+- [x] Fix defects
 
-Part 7: Frontend + Backend
+### Phase 8: Final Verification
+- [x] All tests green, app runs cleanly
 
-Now have the frontend actually use the backend API, so that the app is a proper persistent Kanban board. Test very throughly.
+---
 
-Part 8: AI connectivity
+## Part 3: Scaffolding
 
-Now allow the backend to make an AI call via OpenRouter. Test connectivity with a simple "2+2" test and ensure the AI call is working.
+Set up Docker, FastAPI backend, start/stop scripts. Serve example static HTML to confirm hello world works and make an API call.
 
-Part 9: Now extend the backend call so that it always calls the AI with the JSON of the Kanban board, plus the user's question (and conversation history). The AI should respond with Structured Outputs that includes the response to the user and optionaly an update to the Kanban. Test thoroughly.
+## Part 4: Add Frontend to Backend
 
-Part 10: Now add a beautiful sidebar widget to the UI supporting full AI chat, and allowing the LLM (as it determines) to update the Kanban based on its Structured Outputs. If the AI updates the Kanban, then the UI should refresh automatically.
+Statically build NextJS and serve from FastAPI at /. Comprehensive tests.
+
+## Part 5: Fake User Sign In
+
+Login with dummy credentials ("user", "password"). Logout. Comprehensive tests.
+
+## Part 6: Database Modeling
+
+Propose SQLite schema for the Kanban. Document in docs/ and get user sign off.
+
+## Part 7: Backend API
+
+API routes to read/change Kanban per user. Create DB if it doesn't exist. Backend unit tests.
+
+## Part 8: Frontend + Backend Integration
+
+Frontend uses backend API for persistent Kanban. Thorough testing.
+
+## Part 9: AI Connectivity
+
+Backend makes AI call via OpenRouter. Test with "2+2" test.
+
+## Part 10: AI Structured Outputs
+
+AI receives Kanban JSON + user question + conversation history. Responds with structured output including response and optional Kanban update.
+
+## Part 11: AI Chat Sidebar
+
+Beautiful sidebar widget for AI chat. AI can update Kanban via structured outputs. UI refreshes automatically on Kanban changes.
