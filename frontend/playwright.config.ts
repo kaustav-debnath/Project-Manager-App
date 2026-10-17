@@ -1,4 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
+import { join } from "path";
 
 export default defineConfig({
   testDir: "./e2e",
@@ -17,10 +18,22 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"] },
     },
   ],
-  webServer: {
-    command: "npm run dev",
-    url: "http://localhost:3000",
-    reuseExistingServer: !process.env.CI,
-    timeout: 120000,
-  },
+  webServer: [
+    // Start backend (FastAPI) for API routes
+    {
+      command: process.platform === "win32"
+        ? "cd ..\\backend && uv run uvicorn main:app --port 8001"
+        : "cd " + join(__dirname, "..", "backend") + " && uv run uvicorn main:app --port 8001",
+      url: "http://127.0.0.1:8001/api/hello",
+      timeout: 60000,
+      reuseExistingServer: !process.env.CI,
+    },
+    // Start frontend (Next.js dev with API proxy to backend)
+    {
+      command: "npm run dev",
+      url: "http://127.0.0.1:3000",
+      timeout: 120000,
+      reuseExistingServer: !process.env.CI,
+    },
+  ],
 });

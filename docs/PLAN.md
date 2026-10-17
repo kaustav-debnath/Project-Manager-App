@@ -63,17 +63,23 @@ Set up Docker, FastAPI backend, start/stop scripts. Serve example static HTML to
 
 Statically build NextJS and serve from FastAPI at /. Comprehensive tests.
 
-## Part 5: Fake User Sign In
+## Part 5: Fake User Sign In -- COMPLETE
 
 Login with dummy credentials ("user", "password"). Logout. Comprehensive tests.
 
-## Part 6: Database Modeling
+See [docs/part5-auth.md](part5-auth.md) for the detailed plan.
 
-Propose SQLite schema for the Kanban. Document in docs/ and get user sign off.
+## Part 6: Database Modeling -- COMPLETE
 
-## Part 7: Backend API
+SQLite schema documented in docs/part6-database-modeling.md. Database layer implemented in backend/db.py with tables users, boards, columns, cards, default data seeding, and DB initialization wired into FastAPI startup event.
+
+See [docs/part6-database-modeling.md](part6-database-modeling.md) for the detailed plan.
+
+## Part 7: Backend API -- IN PROGRESS
 
 API routes to read/change Kanban per user. Create DB if it doesn't exist. Backend unit tests.
+
+See [docs/part7-backend-api.md](part7-backend-api.md) for the detailed plan.
 
 ## Part 8: Frontend + Backend Integration
 
