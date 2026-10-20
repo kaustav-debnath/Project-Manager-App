@@ -13,20 +13,6 @@ async def hello() -> dict[str, str]:
 
 # --- Kanban Board CRUD endpoints ---
 
-def get_authenticated_user_id(request: Request) -> int:
-    """Get the DB user_id for the authenticated session."""
-    from main import get_current_user
-    from db import get_user_id
-
-    user = get_current_user(request)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Not authenticated",
-        )
-    return get_user_id(user["username"])
-
-
 @router.get("/board")
 async def get_board(request: Request):
     """Get the authenticated user's board with all columns and cards."""
@@ -61,7 +47,7 @@ async def add_card(request: Request):
 @router.put("/board/card/{card_id}")
 async def update_card(request: Request, card_id: int):
     """Update a card's title and details."""
-    from db import update_card
+    from db import update_card as db_update_card
 
     get_authenticated_user_id(request)
     body = await request.json()
@@ -74,7 +60,7 @@ async def update_card(request: Request, card_id: int):
             detail="Title is required",
         )
 
-    update_card(card_id, title, details)
+    db_update_card(card_id, title, details)
     return {"success": True}
 
 
@@ -119,3 +105,17 @@ async def move_card(request: Request, card_id: int):
 
     db_move_card(card_id, new_column_id, new_position)
     return {"success": True}
+
+
+def get_authenticated_user_id(request: Request) -> int:
+    """Get the DB user_id for the authenticated session."""
+    from main import get_current_user
+    from db import get_user_id
+
+    user = get_current_user(request)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+        )
+    return get_user_id(user["username"])

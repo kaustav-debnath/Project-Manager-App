@@ -6,10 +6,15 @@ import { useAuth } from "@/context/AuthContext";
 export function LoginForm() {
   const { login } = useAuth();
   const [error, setError] = useState("");
+  const usernameRef = React.useRef<HTMLInputElement>(null);
+
+  React.useEffect(() => {
+    usernameRef.current?.focus();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget);
+    const formData = new FormData(e.currentTarget as HTMLFormElement);
     const username = formData.get("username") as string;
     const password = formData.get("password") as string;
 
@@ -49,11 +54,11 @@ export function LoginForm() {
               Username
             </label>
             <input
+              ref={usernameRef}
               id="username"
               type="text"
               name="username"
               placeholder="user"
-              autoFocus
               required
               className="w-full rounded-lg border border-slate-200 px-3.5 py-2 text-sm text-slate-800 placeholder-slate-400 focus:border-blue-primary focus:outline-hidden focus:ring-2 focus:ring-blue-primary/20"
             />

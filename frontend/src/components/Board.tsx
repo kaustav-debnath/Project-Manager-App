@@ -20,11 +20,10 @@ import { CardItemOverlay } from "./CardItem";
 import { CardModal } from "./CardModal";
 
 export function Board() {
-  const { board, moveCard, addCard, editCard, deleteCard, renameColumn } =
+  const { board, loading, error, moveCard, addCard, editCard, deleteCard, renameColumn, refetch } =
     useBoard();
 
   const [activeCard, setActiveCard] = useState<Card | null>(null);
-
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
     mode: "create" | "edit";
@@ -47,6 +46,52 @@ export function Board() {
   });
 
   const sensors = useSensors(pointerSensor, keyboardSensor);
+
+  if (loading) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-16 h-16 rounded-full border-4 border-blue-primary border-t-transparent animate-spin" />
+          <p className="text-sm text-gray-text">Loading board...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center p-6">
+        <div className="rounded-lg border border-red-200 bg-red-50 px-6 py-4 text-center max-w-md">
+          <h3 className="text-lg font-semibold text-red-800 mb-2">Error loading board</h3>
+          <p className="text-sm text-red-700 mb-4">{error}</p>
+          <button
+            type="button"
+            onClick={refetch}
+            className="rounded-lg bg-purple-secondary px-4 py-1.5 text-xs font-semibold text-white shadow-xs hover:bg-[#622e7a] transition-all"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!board) {
+    return (
+      <div className="flex-1 flex items-center justify-center p-6">
+        <div className="rounded-lg border border-slate-200 bg-slate-50 px-6 py-4 text-center max-w-md">
+          <h3 className="text-lg font-semibold text-dark-navy mb-2">No board found</h3>
+          <button
+            type="button"
+            onClick={refetch}
+            className="rounded-lg bg-purple-secondary px-4 py-1.5 text-xs font-semibold text-white shadow-xs hover:bg-[#622e7a] transition-all"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;

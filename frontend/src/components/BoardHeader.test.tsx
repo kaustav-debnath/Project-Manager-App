@@ -26,7 +26,7 @@ describe("BoardHeader", () => {
   it("renders board title and task count correctly", () => {
     render(
       <ThemeProvider>
-        <BoardProvider initialState={testBoard}>
+        <BoardProvider board={testBoard}>
           <BoardHeader />
         </BoardProvider>
       </ThemeProvider>
@@ -40,7 +40,7 @@ describe("BoardHeader", () => {
   it("toggles between light and dark mode", () => {
     render(
       <ThemeProvider>
-        <BoardProvider initialState={testBoard}>
+        <BoardProvider board={testBoard}>
           <BoardHeader />
         </BoardProvider>
       </ThemeProvider>

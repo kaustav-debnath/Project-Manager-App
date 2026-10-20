@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { Board } from "./Board";
 import { BoardProvider } from "@/context/BoardContext";
 import { Board as BoardType } from "@/types/kanban";
@@ -22,12 +22,16 @@ const initialBoard: BoardType = {
 };
 
 describe("Board component", () => {
-  it("renders all columns and cards", () => {
+  it("renders all columns and cards", async () => {
     render(
-      <BoardProvider initialState={initialBoard}>
+      <BoardProvider board={initialBoard}>
         <Board />
       </BoardProvider>
     );
+
+    await waitFor(() => {
+      expect(screen.queryByText("Loading board...")).not.toBeInTheDocument();
+    });
 
     expect(screen.getByText("Column A")).toBeInTheDocument();
     expect(screen.getByText("Column B")).toBeInTheDocument();
@@ -35,12 +39,16 @@ describe("Board component", () => {
     expect(screen.getByText("No cards yet")).toBeInTheDocument();
   });
 
-  it("opens modal and adds a new card to a column", () => {
+  it("opens modal and adds a new card to a column", async () => {
     render(
-      <BoardProvider initialState={initialBoard}>
+      <BoardProvider board={initialBoard}>
         <Board />
       </BoardProvider>
     );
+
+    await waitFor(() => {
+      expect(screen.queryByText("Loading board...")).not.toBeInTheDocument();
+    });
 
     const addButtons = screen.getAllByRole("button", { name: /Add Card/i });
     fireEvent.click(addButtons[0]);
@@ -56,12 +64,16 @@ describe("Board component", () => {
     expect(screen.getByText("Brand New Feature")).toBeInTheDocument();
   });
 
-  it("opens modal and edits an existing card", () => {
+  it("opens modal and edits an existing card", async () => {
     render(
-      <BoardProvider initialState={initialBoard}>
+      <BoardProvider board={initialBoard}>
         <Board />
       </BoardProvider>
     );
+
+    await waitFor(() => {
+      expect(screen.queryByText("Loading board...")).not.toBeInTheDocument();
+    });
 
     fireEvent.click(screen.getByRole("button", { name: "Edit Task A" }));
 
@@ -75,12 +87,16 @@ describe("Board component", () => {
     expect(screen.getByText("Task A Modified")).toBeInTheDocument();
   });
 
-  it("deletes a card via card delete button", () => {
+  it("deletes a card via card delete button", async () => {
     render(
-      <BoardProvider initialState={initialBoard}>
+      <BoardProvider board={initialBoard}>
         <Board />
       </BoardProvider>
     );
+
+    await waitFor(() => {
+      expect(screen.queryByText("Loading board...")).not.toBeInTheDocument();
+    });
 
     expect(screen.getByText("Task A")).toBeInTheDocument();
 

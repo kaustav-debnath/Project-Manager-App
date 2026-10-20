@@ -2,8 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
-  cacheComponents: true,
-  partialPrefetching: true,
+  output: "export",
   turbopack: {
     rules: {
       "*.css": {
@@ -17,7 +16,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/api/:path*",
-        destination: "http://localhost:8001/api/:path*", // Proxy to backend
+        destination: "http://localhost:8000/api/:path*", // Proxy to backend on port 8000
       },
     ];
   },
