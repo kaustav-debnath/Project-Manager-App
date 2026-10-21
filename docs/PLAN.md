@@ -75,24 +75,65 @@ SQLite schema documented in docs/part6-database-modeling.md. Database layer impl
 
 See [docs/part6-database-modeling.md](part6-database-modeling.md) for the detailed plan.
 
-## Part 7: Backend API -- IN PROGRESS
+## Part 7: Backend API -- COMPLETE
 
 API routes to read/change Kanban per user. Create DB if it doesn't exist. Backend unit tests.
 
 See [docs/part7-backend-api.md](part7-backend-api.md) for the detailed plan.
 
-## Part 8: Frontend + Backend Integration
+## Part 8: Frontend + Backend Integration -- COMPLETE
 
-Frontend uses backend API for persistent Kanban. Thorough testing.
+Frontend uses backend API for persistent Kanban. Board state persists across page refreshes. Backend Kanban CRUD routes wired in `backend/routes/api.py`, frontend `BoardContext.tsx` is API-backed with optimistic local updates. 25 backend tests + 26 frontend tests passing.
 
-## Part 9: AI Connectivity
+See [docs/part8-frontend-backend-integration.md](part8-frontend-backend-integration.md) for the detailed plan.
+
+## Part 9: Multi Project Kanban and user setup -- COMPLETE
+
+    In this module we will use the existing fake user 
+    Now the user's authorization will be defined
+    The logged in user will have access to Projects
+    Inside projects, the user can see a list view of kanban boards
+    When clicked on a specific kanban, the user will see the detail view of that kanban
+    Then for that kanban the user may act upon existing cards like add, update, delete etc and all the operations will use the user's CRUD permissions on the db 
+
+See [docs/part9-multi-project-user-setup.md](part9-multi-project-user-setup.md) for the detailed plan.
+
+### Completed Implementation
+- **Database**: `projects` table added, `boards.project_id` FK added, 50 backend tests pass
+- **API**: All project/board endpoints implemented in `backend/routes/api.py`
+- **Frontend**: `/projects` list page, `/projects/[projectId]` detail page, `/projects/[projectId]/boards/[boardId]` Kanban page
+- **Testing**: 50 backend tests + 26 frontend tests passing
+
+## Part 9a: Slug Routing and Nested Board API -- COMPLETE
+
+Projects are addressed by slug and boards are nested under their project, in the URL and in the
+API. The `/projects/**` namespace is one client-rendered route so runtime-created projects and
+boards stay reachable under a static export. Board and project deletion go through an explicit
+confirmation dialog.
+
+See [docs/part9a-routing-and-nested-api.md](part9a-routing-and-nested-api.md) for the detailed plan.
+
+### Completed Implementation
+- **URLs**: `/projects`, `/projects/<slug>`, `/projects/<slug>/boards/<boardId>`
+- **API**: every board endpoint nested under `/api/projects/{project_id}/boards/{board_id}`; the legacy flat routes removed
+- **Database**: `projects.slug` column with migration, backfill and uniqueness
+- **Testing**: 58 backend tests, 28 frontend unit tests, 13 Playwright e2e tests passing
+
+## Part 10: New User Registration, User DB CRUD operations
+
+In this module we will be building new user registration/setup which will be very simple
+so the user db needs to be created if not setup already
+There will be a Profile page accessible under the logged in user's avatar on the top right corner of the page
+From this profile page, the user can change his/her name, email id, password
+
+## Part 11: AI Connectivity
 
 Backend makes AI call via OpenRouter. Test with "2+2" test.
 
-## Part 10: AI Structured Outputs
+## Part 12: AI Structured Outputs
 
 AI receives Kanban JSON + user question + conversation history. Responds with structured output including response and optional Kanban update.
 
-## Part 11: AI Chat Sidebar
+## Part 13: AI Chat Sidebar
 
 Beautiful sidebar widget for AI chat. AI can update Kanban via structured outputs. UI refreshes automatically on Kanban changes.

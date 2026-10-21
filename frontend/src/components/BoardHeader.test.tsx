@@ -3,6 +3,7 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { BoardHeader } from "./BoardHeader";
 import { BoardProvider } from "@/context/BoardContext";
 import { ThemeProvider } from "@/context/ThemeContext";
+import { AuthProvider } from "@/context/AuthContext";
 import { Board } from "@/types/kanban";
 
 const testBoard: Board = {
@@ -26,9 +27,11 @@ describe("BoardHeader", () => {
   it("renders board title and task count correctly", () => {
     render(
       <ThemeProvider>
-        <BoardProvider board={testBoard}>
-          <BoardHeader />
-        </BoardProvider>
+        <AuthProvider>
+          <BoardProvider board={testBoard}>
+            <BoardHeader />
+          </BoardProvider>
+        </AuthProvider>
       </ThemeProvider>
     );
 
@@ -40,9 +43,11 @@ describe("BoardHeader", () => {
   it("toggles between light and dark mode", () => {
     render(
       <ThemeProvider>
-        <BoardProvider board={testBoard}>
-          <BoardHeader />
-        </BoardProvider>
+        <AuthProvider>
+          <BoardProvider board={testBoard}>
+            <BoardHeader />
+          </BoardProvider>
+        </AuthProvider>
       </ThemeProvider>
     );
 
@@ -54,5 +59,37 @@ describe("BoardHeader", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Switch to light mode" }));
     expect(document.documentElement.classList.contains("dark")).toBe(false);
+  });
+
+  it("links back to the project when a slug is given", () => {
+    render(
+      <ThemeProvider>
+        <AuthProvider>
+          <BoardProvider board={testBoard}>
+            <BoardHeader projectSlug="MyProjects" projectTitle="My Projects" />
+          </BoardProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    );
+
+    const link = screen.getByRole("link", { name: "My Projects" });
+    expect(link).toHaveAttribute("href", "/projects/MyProjects");
+  });
+
+  it("links to the project list when no slug is given", () => {
+    render(
+      <ThemeProvider>
+        <AuthProvider>
+          <BoardProvider board={testBoard}>
+            <BoardHeader />
+          </BoardProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    );
+
+    expect(screen.getByRole("link", { name: "Projects" })).toHaveAttribute(
+      "href",
+      "/projects"
+    );
   });
 });

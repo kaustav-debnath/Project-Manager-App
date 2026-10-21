@@ -7,6 +7,7 @@ import { boardReducer } from "./boardReducer";
 
 interface BoardContextType {
   board: Board;
+  boardId: string | null;
   loading: boolean;
   error: string | null;
   refetch: () => Promise<void>;
@@ -45,21 +46,31 @@ function convertBoardFromApi(data: any): Board {
 export function BoardProvider({
   children,
   board: initialBoardProp,
+  boardId,
+  projectId,
 }: {
   children: ReactNode;
   board?: Board;
+  boardId?: string | null;
+  projectId?: number | null;
 }) {
   const [board, dispatch] = useReducer(boardReducer, initialBoardProp ?? initialBoard);
   const [loading, setLoading] = useState(!initialBoardProp);
   const [error, setError] = useState<string | null>(null);
 
   const fetchBoard = useCallback(async () => {
+    if (!boardId || !projectId) {
+      return;
+    }
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch("/api/board", {
-        credentials: "include",
-      });
+
+      const response = await fetch(
+        `/api/projects/${projectId}/boards/${boardId}`,
+        { credentials: "include" }
+      );
+
       if (!response.ok) {
         throw new Error("Failed to load board");
       }
@@ -71,7 +82,7 @@ export function BoardProvider({
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [boardId, projectId]);
 
   useEffect(() => {
     if (!initialBoardProp) {
@@ -87,21 +98,24 @@ export function BoardProvider({
         payload: { cardId, sourceColumnId, destinationColumnId, newIndex },
       });
       try {
-        await fetch(`/api/board/card/${Number(cardId)}/move`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({
-            newColumnId: Number(destinationColumnId),
-            newPosition: newIndex,
-          }),
-        });
+        await fetch(
+          `/api/projects/${projectId}/boards/${boardId}/cards/${Number(cardId)}/move`,
+          {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({
+              newColumnId: Number(destinationColumnId),
+              newPosition: newIndex,
+            }),
+          }
+        );
       } catch (err) {
         await fetchBoard();
         throw err;
       }
     },
-    [fetchBoard]
+    [fetchBoard, boardId, projectId]
   );
 
   const addCard = useCallback(
@@ -111,16 +125,19 @@ export function BoardProvider({
         payload: { columnId, card: { title, details } },
       });
       try {
-        await fetch("/api/board/card", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({
-            columnId: Number(columnId),
-            title,
-            details,
-          }),
-        });
+        await fetch(
+          `/api/projects/${projectId}/boards/${boardId}/columns/${Number(columnId)}/card`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({
+              columnId: Number(columnId),
+              title,
+              details,
+            }),
+          }
+        );
         // Re-fetch to get the correct card ID from the backend
         await fetchBoard();
       } catch (err) {
@@ -128,7 +145,7 @@ export function BoardProvider({
         throw err;
       }
     },
-    [fetchBoard]
+    [fetchBoard, boardId, projectId]
   );
 
   const editCard = useCallback(
@@ -138,18 +155,21 @@ export function BoardProvider({
         payload: { cardId, title, details },
       });
       try {
-        await fetch(`/api/board/card/${Number(cardId)}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ title, details }),
-        });
+        await fetch(
+          `/api/projects/${projectId}/boards/${boardId}/cards/${Number(cardId)}`,
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ title, details }),
+          }
+        );
       } catch (err) {
         await fetchBoard();
         throw err;
       }
     },
-    [fetchBoard]
+    [fetchBoard, boardId, projectId]
   );
 
   const deleteCard = useCallback(
@@ -159,16 +179,19 @@ export function BoardProvider({
         payload: { cardId },
       });
       try {
-        await fetch(`/api/board/card/${Number(cardId)}`, {
-          method: "DELETE",
-          credentials: "include",
-        });
+        await fetch(
+          `/api/projects/${projectId}/boards/${boardId}/cards/${Number(cardId)}`,
+          {
+            method: "DELETE",
+            credentials: "include",
+          }
+        );
       } catch (err) {
         await fetchBoard();
         throw err;
       }
     },
-    [fetchBoard]
+    [fetchBoard, boardId, projectId]
   );
 
   const renameColumn = useCallback(
@@ -178,24 +201,28 @@ export function BoardProvider({
         payload: { columnId, title },
       });
       try {
-        await fetch(`/api/board/column/${Number(columnId)}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ title }),
-        });
+        await fetch(
+          `/api/projects/${projectId}/boards/${boardId}/columns/${Number(columnId)}`,
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ title }),
+          }
+        );
       } catch (err) {
         await fetchBoard();
         throw err;
       }
     },
-    [fetchBoard]
+    [fetchBoard, boardId, projectId]
   );
 
   return (
     <BoardContext.Provider
       value={{
         board,
+        boardId: boardId ?? null,
         loading,
         error,
         refetch: fetchBoard,

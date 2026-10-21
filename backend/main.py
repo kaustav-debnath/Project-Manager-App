@@ -8,8 +8,9 @@ and will grow through Parts 4-11.
 import os
 import sys
 from datetime import datetime
+from pathlib import Path
 from fastapi import FastAPI, Request, status
-from fastapi.responses import JSONResponse, HTMLResponse
+from fastapi.responses import JSONResponse, HTMLResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 
 # Ensure backend directory is in sys.path so modules resolve whether executed
@@ -120,17 +121,40 @@ def _is_authenticated(request: Request) -> bool:
     return get_current_user(request) is not None
 
 
-@app.get("/")
+def _resolve_static(path: str) -> Path | None:
+    """Map a request path to the exported file that serves it.
+
+    The projects namespace is a single client-rendered route, so every path
+    inside it resolves to the same exported page: the browser reads the
+    project slug and board id from the URL. The ".txt" variant is the RSC
+    payload the Next.js client router requests for client-side navigation.
+    """
+    is_payload = path.endswith(".txt")
+    route = path[:-4] if is_payload else path
+
+    if route == "projects" or route.startswith("projects/"):
+        name = "projects.txt" if is_payload else "projects.html"
+        candidate = STATIC_DIR / name
+        return candidate if candidate.is_file() else None
+
+    if route == "login" and not is_payload:
+        candidate = STATIC_DIR / "login.html"
+        return candidate if candidate.is_file() else None
+
+    return FRONTEND_INDEX if FRONTEND_INDEX.is_file() else None
+
+
+@app.api_route("/", methods=["GET", "HEAD"])
 async def serve_frontend(request: Request):
     """Serve the statically-built NextJS frontend with auth check."""
     if not _is_authenticated(request):
         return HTMLResponse(content=LOGIN_HTML, status_code=200)
     if FRONTEND_INDEX.is_file():
-        return HTMLResponse(content=FRONTEND_INDEX.read_text(encoding="utf-8"))
+        return FileResponse(FRONTEND_INDEX)
     return HTMLResponse(content=HELLO_WORLD_HTML)
 
 
-@app.get("/{path:path}")
+@app.api_route("/{path:path}", methods=["GET", "HEAD"])
 async def catch_all(request: Request, path: str):
     """Catch-all route for SPA routing and static assets."""
     # Serve Next.js static assets without auth check
@@ -138,15 +162,18 @@ async def catch_all(request: Request, path: str):
         if STATIC_DIR.is_dir():
             file_path = STATIC_DIR / path
             if file_path.is_file():
-                return HTMLResponse(
-                    content=file_path.read_text(encoding="utf-8"),
-                    media_type="text/plain",
-                )
+                return FileResponse(file_path)
+        return HTMLResponse(status_code=404)
+
+    # Unknown API routes are not pages
+    if path.startswith("api/"):
         return HTMLResponse(status_code=404)
 
     # Require auth for all other routes
     if not _is_authenticated(request):
         return HTMLResponse(content=LOGIN_HTML, status_code=200)
-    if FRONTEND_INDEX.is_file():
-        return HTMLResponse(content=FRONTEND_INDEX.read_text(encoding="utf-8"))
-    return HTMLResponse(content=HELLO_WORLD_HTML)
+
+    file_path = _resolve_static(path)
+    if file_path is None:
+        return HTMLResponse(status_code=404)
+    return FileResponse(file_path)
