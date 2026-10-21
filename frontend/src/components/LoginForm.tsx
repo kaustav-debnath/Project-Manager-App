@@ -60,7 +60,7 @@ export function LoginForm() {
               name="username"
               placeholder="user"
               required
-              className="w-full rounded-lg border border-slate-200 px-3.5 py-2 text-sm text-slate-800 placeholder-slate-400 focus:border-blue-primary focus:outline-hidden focus:ring-2 focus:ring-blue-primary/20"
+              className="w-full rounded-lg border border-slate-200 px-3.5 py-2 text-sm text-white placeholder-slate-400 focus:border-blue-primary focus:outline-hidden focus:ring-2 focus:ring-blue-primary/20"
             />
           </div>
           <div>
@@ -76,7 +76,7 @@ export function LoginForm() {
               name="password"
               placeholder="password"
               required
-              className="w-full rounded-lg border border-slate-200 px-3.5 py-2 text-sm text-slate-800 placeholder-slate-400 focus:border-blue-primary focus:outline-hidden focus:ring-2 focus:ring-blue-primary/20"
+              className="w-full rounded-lg border border-slate-200 px-3.5 py-2 text-sm text-white placeholder-slate-400 focus:border-blue-primary focus:outline-hidden focus:ring-2 focus:ring-blue-primary/20"
             />
           </div>
           <button

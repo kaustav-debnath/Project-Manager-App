@@ -1,4 +1,4 @@
-"""Unit tests for Kanban board API endpoints."""
+"""Unit tests for Kanban card and column API endpoints."""
 
 import pytest
 from fastapi.testclient import TestClient
@@ -24,18 +24,27 @@ def unauth_client():
         yield c
 
 
+def seeded_board(client):
+    """Return the project id, board id and column ids of the seeded board."""
+    project_id = client.get("/api/projects").json()["projects"][0]["id"]
+    board_id = client.get(f"/api/projects/{project_id}/boards").json()["boards"][0]["id"]
+    board = client.get(f"/api/projects/{project_id}/boards/{board_id}").json()["board"]
+    columns = {column["title"]: column["id"] for column in board["columns"]}
+    return project_id, board_id, columns
+
+
 def test_get_board_requires_auth(unauth_client):
-    """GET /api/board should return 401 when not authenticated."""
-    resp = unauth_client.get("/api/board")
+    """GET board should return 401 when not authenticated."""
+    resp = unauth_client.get("/api/projects/1/boards/1")
     assert resp.status_code == 401
 
 
 def test_get_board_returns_seeded_data(client):
-    """GET /api/board should return the seeded board with columns and cards."""
-    resp = client.get("/api/board")
+    """GET board should return the seeded board with columns and cards."""
+    project_id, board_id, _ = seeded_board(client)
+    resp = client.get(f"/api/projects/{project_id}/boards/{board_id}")
     assert resp.status_code == 200
-    data = resp.json()
-    board = data["board"]
+    board = resp.json()["board"]
     assert board["title"] == "Project Alpha Roadmap"
     assert len(board["columns"]) == 5
     column_titles = [c["title"] for c in board["columns"]]
@@ -47,26 +56,30 @@ def test_get_board_returns_seeded_data(client):
 
 
 def test_add_card_requires_auth(unauth_client):
-    """POST /api/board/card should return 401 when not authenticated."""
-    resp = unauth_client.post("/api/board/card", json={
-        "columnId": 1, "title": "Test", "details": "Test details"
+    """POST card should return 401 when not authenticated."""
+    resp = unauth_client.post("/api/projects/1/boards/1/columns/1/card", json={
+        "title": "Test", "details": "Test details"
     })
     assert resp.status_code == 401
 
 
 def test_add_card_requires_title(client):
-    """POST /api/board/card should return 400 when title is empty."""
-    resp = client.post("/api/board/card", json={
-        "columnId": 1, "title": "", "details": "Test"
-    })
+    """POST card should return 400 when title is empty."""
+    project_id, board_id, columns = seeded_board(client)
+    resp = client.post(
+        f"/api/projects/{project_id}/boards/{board_id}/columns/{columns['Backlog']}/card",
+        json={"title": "", "details": "Test"},
+    )
     assert resp.status_code == 400
 
 
 def test_add_card_success(client):
-    """POST /api/board/card should create a new card."""
-    resp = client.post("/api/board/card", json={
-        "columnId": 1, "title": "New Test Card", "details": "Test details"
-    })
+    """POST card should create a new card."""
+    project_id, board_id, columns = seeded_board(client)
+    resp = client.post(
+        f"/api/projects/{project_id}/boards/{board_id}/columns/{columns['Backlog']}/card",
+        json={"title": "New Test Card", "details": "Test details"},
+    )
     assert resp.status_code == 200
     data = resp.json()
     assert data["success"] is True
@@ -74,16 +87,17 @@ def test_add_card_success(client):
 
 
 def test_update_card_requires_auth(unauth_client):
-    """PUT /api/board/card/{id} should return 401 when not authenticated."""
-    resp = unauth_client.put("/api/board/card/1", json={
+    """PUT card should return 401 when not authenticated."""
+    resp = unauth_client.put("/api/projects/1/boards/1/cards/1", json={
         "title": "Updated", "details": "Updated details"
     })
     assert resp.status_code == 401
 
 
 def test_update_card_success(client):
-    """PUT /api/board/card/{id} should update a card."""
-    resp = client.put("/api/board/card/1", json={
+    """PUT card should update a card."""
+    project_id, board_id, _ = seeded_board(client)
+    resp = client.put(f"/api/projects/{project_id}/boards/{board_id}/cards/1", json={
         "title": "Updated Title", "details": "Updated details"
     })
     assert resp.status_code == 200
@@ -92,48 +106,53 @@ def test_update_card_success(client):
 
 
 def test_delete_card_requires_auth(unauth_client):
-    """DELETE /api/board/card/{id} should return 401 when not authenticated."""
-    resp = unauth_client.delete("/api/board/card/1")
+    """DELETE card should return 401 when not authenticated."""
+    resp = unauth_client.delete("/api/projects/1/boards/1/cards/1")
     assert resp.status_code == 401
 
 
 def test_delete_card_success(client):
-    """DELETE /api/board/card/{id} should delete a card."""
-    resp = client.delete("/api/board/card/1")
+    """DELETE card should delete a card."""
+    project_id, board_id, _ = seeded_board(client)
+    resp = client.delete(f"/api/projects/{project_id}/boards/{board_id}/cards/1")
     assert resp.status_code == 200
     data = resp.json()
     assert data["success"] is True
 
 
 def test_rename_column_requires_auth(unauth_client):
-    """PUT /api/board/column/{id} should return 401 when not authenticated."""
-    resp = unauth_client.put("/api/board/column/1", json={"title": "Renamed"})
+    """PUT column should return 401 when not authenticated."""
+    resp = unauth_client.put("/api/projects/1/boards/1/columns/1", json={"title": "Renamed"})
     assert resp.status_code == 401
 
 
 def test_rename_column_success(client):
-    """PUT /api/board/column/{id} should rename a column."""
-    # Use column 2 (To Do) to avoid affecting the seeded Backlog column
-    resp = client.put("/api/board/column/2", json={"title": "Renamed Column"})
+    """PUT column should rename a column."""
+    project_id, board_id, columns = seeded_board(client)
+    resp = client.put(
+        f"/api/projects/{project_id}/boards/{board_id}/columns/{columns['To Do']}",
+        json={"title": "Renamed Column"},
+    )
     assert resp.status_code == 200
     data = resp.json()
     assert data["success"] is True
 
 
 def test_move_card_requires_auth(unauth_client):
-    """PATCH /api/board/card/{id}/move should return 401 when not authenticated."""
-    resp = unauth_client.patch("/api/board/card/1/move", json={
+    """PATCH card move should return 401 when not authenticated."""
+    resp = unauth_client.patch("/api/projects/1/boards/1/cards/1/move", json={
         "newColumnId": 2, "newPosition": 0
     })
     assert resp.status_code == 401
 
 
 def test_move_card_success(client):
-    """PATCH /api/board/card/{id}/move should move a card."""
-    # Use card 3 (still exists after delete_card test deletes card 1)
-    resp = client.patch("/api/board/card/3/move", json={
-        "newColumnId": 2, "newPosition": 0
-    })
+    """PATCH card move should move a card."""
+    project_id, board_id, columns = seeded_board(client)
+    resp = client.patch(
+        f"/api/projects/{project_id}/boards/{board_id}/cards/3/move",
+        json={"newColumnId": columns["To Do"], "newPosition": 0},
+    )
     assert resp.status_code == 200
     data = resp.json()
     assert data["success"] is True

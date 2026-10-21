@@ -1,8 +1,11 @@
 import type { NextConfig } from "next";
 
+// Static export is only needed for the production build (Docker image).
+// The dev server needs rewrites so /api/* proxies to the FastAPI backend.
+const isDev = process.env.NODE_ENV !== "production";
+
 const nextConfig: NextConfig = {
-  /* config options here */
-  output: "export",
+  ...(isDev ? {} : { output: "export" as const }),
   turbopack: {
     rules: {
       "*.css": {
@@ -13,12 +16,15 @@ const nextConfig: NextConfig = {
   },
   // Proxy API requests to backend during development
   async rewrites() {
-    return [
-      {
-        source: "/api/:path*",
-        destination: "http://localhost:8000/api/:path*", // Proxy to backend on port 8000
-      },
-    ];
+    if (isDev) {
+      return [
+        {
+          source: "/api/:path*",
+          destination: "http://localhost:8000/api/:path*",
+        },
+      ];
+    }
+    return [];
   },
 };
 
