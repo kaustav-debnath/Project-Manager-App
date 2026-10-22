@@ -1,0 +1,23 @@
+# Netlify hosts the static Next.js frontend only.
+# The FastAPI backend (SQLite, sessions, AI chat) must run on a separate host.
+
+[build]
+  command = "npm ci --prefix frontend && npm run build --prefix frontend"
+  publish = "frontend/out"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# Client-side project routes such as /projects/<id> are served by the projects page
+[[redirects]]
+  from = "/projects/*"
+  to = "/projects.html"
+  status = 200
+
+# Forward API calls to the backend so the browser sees one origin (cookies keep working).
+# Replace BACKEND_URL with the deployed backend address before going live.
+[[redirects]]
+  from = "/api/*"
+  to = "BACKEND_URL/api/:splat"
+  status = 200
+  force = true

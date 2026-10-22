@@ -2,13 +2,24 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { AuthProvider, useAuth } from "@/context/AuthContext";
 
-export default function Home() {
+function RootRedirect() {
   const router = useRouter();
+  const { user, isLoading } = useAuth();
 
   useEffect(() => {
-    router.replace("/projects");
-  }, [router]);
+    if (isLoading) return;
+    router.replace(user ? "/projects" : "/login");
+  }, [isLoading, user, router]);
 
   return null;
+}
+
+export default function Home() {
+  return (
+    <AuthProvider>
+      <RootRedirect />
+    </AuthProvider>
+  );
 }

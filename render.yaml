@@ -1,0 +1,21 @@
+# Render Blueprint for the FastAPI backend (SQLite on a persistent disk).
+# The frontend is hosted on Netlify, which proxies /api/* to this service.
+
+services:
+  - type: web
+    name: omniroute-backend
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: starter
+    region: oregon
+    healthCheckPath: /api/auth/status
+    envVars:
+      - key: DB_PATH
+        value: /data/omniroute.db
+      - key: OPENROUTER_API_KEY
+        sync: false
+    disk:
+      name: omniroute-data
+      mountPath: /data
+      sizeGB: 1
