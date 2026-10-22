@@ -6,10 +6,11 @@ and will grow through Parts 4-11.
 """
 
 import os
+import sqlite3
 import sys
 from datetime import datetime
 from pathlib import Path
-from fastapi import FastAPI, Request, status
+from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.responses import JSONResponse, HTMLResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -17,8 +18,16 @@ from fastapi.staticfiles import StaticFiles
 # from within backend/ or from repository root.
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+from accounts import email_error, name_error, password_error  # noqa: E402
 from config import STATIC_DIR  # noqa: E402
-from db import init_db, close_db_connection, get_default_user_id  # noqa: E402
+from db import (  # noqa: E402
+    init_db,
+    close_db_connection,
+    create_user,
+    get_user_by_email,
+    get_user_by_id,
+    verify_password,
+)
 from routes.api import router as api_router  # noqa: E402
 from routes.views import router as views_router, LOGIN_HTML, HELLO_WORLD_HTML  # noqa: E402
 
@@ -36,10 +45,6 @@ app.include_router(api_router)
 # In production, this would use Redis or database-backed sessions
 active_sessions: dict[str, dict] = {}
 
-# Credentials for MVP (hardcoded as per requirements)
-VALID_USERNAME = "user"
-VALID_PASSWORD = "password"
-
 # Session cookie name
 SESSION_COOKIE = "session_id"
 
@@ -47,20 +52,29 @@ SESSION_COOKIE = "session_id"
 FRONTEND_INDEX = STATIC_DIR / "index.html"
 
 
-def create_session(username: str) -> str:
-    """Create a new session for authenticated user."""
+def create_session(user_id: int) -> str:
+    """Create a new session for an authenticated user."""
     import secrets
 
     session_id = secrets.token_urlsafe(32)
     active_sessions[session_id] = {
-        "username": username,
+        "user_id": user_id,
         "created_at": datetime.utcnow().isoformat(),
     }
     return session_id
 
 
+def sign_out_other_sessions(user_id: int, keep_session_id: str | None) -> None:
+    """End every session of a user except the one making the request."""
+    for session_id in [
+        sid for sid, data in active_sessions.items()
+        if data["user_id"] == user_id and sid != keep_session_id
+    ]:
+        del active_sessions[session_id]
+
+
 def get_current_user(request: Request) -> dict | None:
-    """Get current user from session cookie."""
+    """Get the session for the request's session cookie."""
     session_id = request.cookies.get(SESSION_COOKIE)
     if not session_id:
         return None
@@ -70,30 +84,70 @@ def get_current_user(request: Request) -> dict | None:
     return session
 
 
+def public_user(account: dict) -> dict:
+    """The profile fields that are safe to send to the browser."""
+    return {"id": account["id"], "name": account["name"], "email": account["email"]}
+
+
+def set_session_cookie(response: JSONResponse, session_id: str) -> None:
+    """Attach the session cookie to a response."""
+    response.set_cookie(
+        key=SESSION_COOKIE,
+        value=session_id,
+        httponly=True,
+        secure=False,  # Set True in production with HTTPS
+        samesite="lax",
+        max_age=60 * 60 * 24,  # 24 hours
+    )
+
+
 @app.post("/api/login")
 async def login(request: Request):
-    """Login endpoint with hardcoded credentials for MVP."""
+    """Sign in with email and password."""
     body = await request.json()
-    username = body.get("username", "")
-    password = body.get("password", "")
+    email = str(body.get("email", "")).strip().lower()
+    password = str(body.get("password", ""))
 
-    if username == VALID_USERNAME and password == VALID_PASSWORD:
-        session_id = create_session(str(username))
-        response = JSONResponse(content={"success": True, "username": username})
-        response.set_cookie(
-            key=SESSION_COOKIE,
-            value=session_id,
-            httponly=True,
-            secure=False,  # Set True in production with HTTPS
-            samesite="lax",
-            max_age=60 * 60 * 24,  # 24 hours
-        )
+    account = get_user_by_email(email) if email else None
+    if account and verify_password(password, account["password_hash"]):
+        session_id = create_session(account["id"])
+        response = JSONResponse(content={"success": True, "user": public_user(account)})
+        set_session_cookie(response, session_id)
         return response
-    else:
-        return JSONResponse(
-            content={"success": False, "error": "Invalid username or password"},
-            status_code=status.HTTP_401_UNAUTHORIZED,
-        )
+    return JSONResponse(
+        content={"success": False, "error": "Invalid email or password"},
+        status_code=status.HTTP_401_UNAUTHORIZED,
+    )
+
+
+@app.post("/api/register")
+async def register(request: Request):
+    """Create an account, sign the new user in and give them a sample project."""
+    body = await request.json()
+    name = str(body.get("name", "")).strip()
+    email = str(body.get("email", "")).strip().lower()
+    password = str(body.get("password", ""))
+
+    error = name_error(name) or email_error(email) or password_error(password)
+    if error:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error)
+
+    duplicate_detail = "An account with this email already exists"
+    if get_user_by_email(email):
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=duplicate_detail)
+
+    try:
+        user_id = create_user(name, email, password)
+    except sqlite3.IntegrityError:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=duplicate_detail)
+
+    session_id = create_session(user_id)
+    response = JSONResponse(
+        content={"success": True, "user": public_user(get_user_by_id(user_id))},
+        status_code=status.HTTP_201_CREATED,
+    )
+    set_session_cookie(response, session_id)
+    return response
 
 
 @app.post("/api/logout")
@@ -110,15 +164,21 @@ async def logout(request: Request):
 
 @app.get("/api/auth/status")
 async def auth_status(request: Request):
-    """Check authentication status."""
-    user = get_current_user(request)
-    if user:
-        return {"authenticated": True, "username": user["username"]}
+    """Check authentication status and return the signed-in user's profile."""
+    session = get_current_user(request)
+    if session:
+        account = get_user_by_id(session["user_id"])
+        if account:
+            return {"authenticated": True, "user": public_user(account)}
     return {"authenticated": False}
 
 
 def _is_authenticated(request: Request) -> bool:
     return get_current_user(request) is not None
+
+
+# Pages anyone can open without signing in
+PUBLIC_PAGES = {"login", "register"}
 
 
 def _resolve_static(path: str) -> Path | None:
@@ -137,8 +197,8 @@ def _resolve_static(path: str) -> Path | None:
         candidate = STATIC_DIR / name
         return candidate if candidate.is_file() else None
 
-    if route == "login" and not is_payload:
-        candidate = STATIC_DIR / "login.html"
+    if route in {"login", "register", "profile"} and not is_payload:
+        candidate = STATIC_DIR / f"{route}.html"
         return candidate if candidate.is_file() else None
 
     return FRONTEND_INDEX if FRONTEND_INDEX.is_file() else None
@@ -168,6 +228,11 @@ async def catch_all(request: Request, path: str):
     # Unknown API routes are not pages
     if path.startswith("api/"):
         return HTMLResponse(status_code=404)
+
+    # Public pages are served without the auth gate
+    if path in PUBLIC_PAGES:
+        file_path = _resolve_static(path)
+        return FileResponse(file_path) if file_path else HTMLResponse(status_code=404)
 
     # Require auth for all other routes
     if not _is_authenticated(request):

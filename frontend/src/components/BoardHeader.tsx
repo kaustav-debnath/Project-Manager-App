@@ -3,8 +3,8 @@
 import React from "react";
 import Link from "next/link";
 import { useBoard } from "@/context/BoardContext";
-import { LogoutButton } from "./LogoutButton";
 import { ThemeToggle } from "./ThemeToggle";
+import { UserMenu } from "./UserMenu";
 
 export function BoardHeader({
   projectSlug,
@@ -31,8 +31,8 @@ export function BoardHeader({
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <LogoutButton />
             <ThemeToggle />
+            <UserMenu />
           </div>
         </div>
       </header>
@@ -77,8 +77,8 @@ export function BoardHeader({
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <LogoutButton />
           <ThemeToggle />
+          <UserMenu />
         </div>
       </div>
     </header>

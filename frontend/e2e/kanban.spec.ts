@@ -11,8 +11,8 @@ let e2eBoardId = "";
 
 async function login(page: Page) {
   await page.goto("/login");
-  await page.getByPlaceholder("user").fill("user");
-  await page.getByPlaceholder("password").fill("password");
+  await page.getByPlaceholder("you@example.com").fill("user@example.com");
+  await page.locator("input[name=password]").fill("password");
   await page.getByRole("button", { name: "Sign In" }).click();
   await expect(page).toHaveURL(/\/projects$/);
 }
@@ -122,7 +122,7 @@ test.describe("OmniRoute routing", () => {
 test.describe("Kanban Board MVP", () => {
   test.beforeAll(async ({ request }) => {
     await request.post("/api/login", {
-      data: { username: "user", password: "password" },
+      data: { email: "user@example.com", password: "password" },
     });
 
     const projectResponse = await request.post("/api/projects", {
@@ -159,7 +159,7 @@ test.describe("Kanban Board MVP", () => {
 
   test.afterAll(async ({ request }) => {
     await request.post("/api/login", {
-      data: { username: "user", password: "password" },
+      data: { email: "user@example.com", password: "password" },
     });
     await request.delete(`/api/projects/${e2eProjectId}`);
   });

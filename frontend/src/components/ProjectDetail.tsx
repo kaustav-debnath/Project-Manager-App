@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { BoardSelector } from "./BoardSelector";
 import { BoardModal } from "./BoardModal";
-import { LogoutButton } from "./LogoutButton";
 import { ThemeToggle } from "./ThemeToggle";
+import { UserMenu } from "./UserMenu";
 
 interface Project {
   id: string;
@@ -134,8 +134,8 @@ export function ProjectDetail({
             >
               New Board
             </button>
-            <LogoutButton />
             <ThemeToggle />
+            <UserMenu />
           </div>
         </div>
       </header>

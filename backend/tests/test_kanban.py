@@ -11,7 +11,7 @@ def client():
 
     with TestClient(app) as c:
         # Login first
-        c.post("/api/login", json={"username": "user", "password": "password"})
+        c.post("/api/login", json={"email": "user@example.com", "password": "password"})
         yield c
 
 

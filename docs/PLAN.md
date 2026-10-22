@@ -119,7 +119,9 @@ See [docs/part9a-routing-and-nested-api.md](part9a-routing-and-nested-api.md) fo
 - **Database**: `projects.slug` column with migration, backfill and uniqueness
 - **Testing**: 58 backend tests, 28 frontend unit tests, 13 Playwright e2e tests passing
 
-## Part 10: New User Registration, User DB CRUD operations
+## Part 10: New User Registration, User DB CRUD operations -- IMPLEMENTED (deploy check pending)
+
+See [docs/part10-user-registration-profile.md](part10-user-registration-profile.md) for the detailed plan. Implementation starts after plan approval.
 
 In this module we will be building new user registration/setup which will be very simple
 so the user db needs to be created if not setup already
