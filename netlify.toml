@@ -15,9 +15,8 @@
   status = 200
 
 # Forward API calls to the backend so the browser sees one origin (cookies keep working).
-# Replace BACKEND_URL with the deployed backend address before going live.
 [[redirects]]
   from = "/api/*"
-  to = "BACKEND_URL/api/:splat"
+  to = "https://project-manager-app-y74b.onrender.com/api/:splat"
   status = 200
   force = true

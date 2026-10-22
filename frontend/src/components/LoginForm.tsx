@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { ThemeToggle } from "./ThemeToggle";
 
 export function LoginForm() {
   const { login } = useAuth();
@@ -27,7 +28,10 @@ export function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#032147] text-dark-navy">
+    <div className="relative min-h-screen flex items-center justify-center bg-[#032147] text-dark-navy">
+      <div className="absolute top-4 right-6">
+        <ThemeToggle />
+      </div>
       <div className="w-full max-w-md px-6 py-8">
         <div className="flex items-center justify-center gap-2 mb-6">
           <div className="h-8 w-1.5 rounded-full bg-accent-yellow" />

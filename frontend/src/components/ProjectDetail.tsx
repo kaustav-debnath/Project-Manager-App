@@ -6,6 +6,7 @@ import { useAuth } from "@/context/AuthContext";
 import { BoardSelector } from "./BoardSelector";
 import { BoardModal } from "./BoardModal";
 import { LogoutButton } from "./LogoutButton";
+import { ThemeToggle } from "./ThemeToggle";
 
 interface Project {
   id: string;
@@ -134,6 +135,7 @@ export function ProjectDetail({
               New Board
             </button>
             <LogoutButton />
+            <ThemeToggle />
           </div>
         </div>
       </header>
