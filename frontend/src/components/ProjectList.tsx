@@ -82,8 +82,8 @@ export function ProjectList() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#070b14] transition-colors">
-      <header className="border-b border-slate-200 bg-white px-6 py-4 shadow-xs dark:border-slate-800 dark:bg-[#0c1424] transition-colors">
-        <div className="mx-auto flex max-w-7xl items-center justify-between">
+      <header className="border-b border-slate-200 bg-white px-4 py-4 sm:px-6 shadow-xs dark:border-slate-800 dark:bg-[#0c1424] transition-colors">
+        <div className="mx-auto flex max-w-7xl flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
             <div className="h-8 w-1.5 rounded-full bg-accent-yellow dark:bg-[#ffd600] dark:shadow-[0_0_12px_#ffd600]" />
             <div>
@@ -95,7 +95,7 @@ export function ProjectList() {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <button
               type="button"
               onClick={() => setIsModalOpen(true)}
@@ -108,7 +108,7 @@ export function ProjectList() {
           </div>
         </div>
       </header>
-      <main className="mx-auto max-w-7xl px-6 py-8">
+      <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
         {error && (
           <div className="rounded-lg border border-red-200 bg-red-50 px-6 py-4 text-center max-w-md mb-6">
             <p className="text-sm text-red-700 mb-4">{error}</p>
@@ -154,7 +154,7 @@ export function ProjectList() {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
             {projects.map((project) => (
               <ProjectCard
                 key={project.id}

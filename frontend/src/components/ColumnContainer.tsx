@@ -50,7 +50,7 @@ export function ColumnContainer({
   return (
     <div
       ref={setNodeRef}
-      className={`flex h-full w-80 shrink-0 flex-col rounded-xl border bg-slate-100/70 p-3 transition-all dark:bg-[#0c1424]/90 dark:border-slate-800/90 ${
+      className={`flex h-full w-72 shrink-0 flex-col sm:w-80 rounded-xl border bg-slate-100/70 p-3 transition-all dark:bg-[#0c1424]/90 dark:border-slate-800/90 ${
         isOver
           ? "border-blue-primary/60 bg-blue-50/20 dark:border-cyan-400 dark:bg-cyan-950/25 dark:shadow-[0_0_20px_rgba(34,211,238,0.2)]"
           : "border-slate-200/80 shadow-2xs"

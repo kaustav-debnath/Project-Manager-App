@@ -35,7 +35,7 @@ export function LoginForm() {
       <div className="w-full max-w-md px-6 py-8">
         <div className="flex items-center justify-center gap-2 mb-6">
           <div className="h-8 w-1.5 rounded-full bg-accent-yellow" />
-          <h1 className="text-2xl font-bold tracking-tight text-dark-navy">
+          <h1 className="text-2xl font-bold tracking-tight text-white">
             OmniRoute
           </h1>
         </div>

@@ -192,7 +192,7 @@ export function Board() {
   };
 
   return (
-    <div className="flex-1 overflow-x-auto p-6">
+    <div className="flex-1 overflow-x-auto p-4 sm:p-6">
       <DndContext
         id="kanban-board-dnd"
         sensors={sensors}
@@ -200,7 +200,7 @@ export function Board() {
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="inline-flex h-[calc(100vh-140px)] min-h-[500px] gap-5 items-stretch">
+        <div className="inline-flex h-[calc(100vh-140px)] min-h-[500px] gap-3 sm:gap-5 items-stretch">
           {board.columns.map((column) => (
             <ColumnContainer
               key={column.id}
