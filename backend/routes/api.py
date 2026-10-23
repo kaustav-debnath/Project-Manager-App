@@ -1,6 +1,10 @@
 """API router for OmniRoute backend."""
 
+import sqlite3
+
 from fastapi import APIRouter, Request, HTTPException, status
+
+from accounts import email_error, name_error, password_error
 
 router = APIRouter(prefix="/api", tags=["api"])
 
@@ -16,7 +20,6 @@ async def hello() -> dict[str, str]:
 def get_authenticated_user_id(request: Request) -> int:
     """Get the DB user_id for the authenticated session."""
     from main import get_current_user
-    from db import get_user_id
 
     user = get_current_user(request)
     if not user:
@@ -24,7 +27,76 @@ def get_authenticated_user_id(request: Request) -> int:
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not authenticated",
         )
-    return get_user_id(user["username"])
+    return user["user_id"]
+
+
+# --- Profile endpoints ---
+
+@router.get("/profile")
+async def get_profile(request: Request):
+    """Get the signed-in user's profile."""
+    from db import get_user_by_id
+    from main import public_user
+
+    account = get_user_by_id(get_authenticated_user_id(request))
+    return {"user": public_user(account)}
+
+
+@router.patch("/profile")
+async def update_profile(request: Request):
+    """Update the signed-in user's name and/or email."""
+    from db import get_user_by_id, get_user_by_email, update_user_profile
+    from main import public_user
+
+    user_id = get_authenticated_user_id(request)
+    account = get_user_by_id(user_id)
+    body = await request.json()
+
+    name = str(body["name"]).strip() if "name" in body else account["name"]
+    email = str(body["email"]).strip().lower() if "email" in body else account["email"]
+
+    error = name_error(name) or email_error(email)
+    if error:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error)
+
+    duplicate_detail = "An account with this email already exists"
+    taken = get_user_by_email(email)
+    if taken and taken["id"] != user_id:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=duplicate_detail)
+
+    try:
+        update_user_profile(user_id, name, email)
+    except sqlite3.IntegrityError:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=duplicate_detail)
+
+    return {"user": public_user(get_user_by_id(user_id))}
+
+
+@router.post("/profile/password")
+async def change_password(request: Request):
+    """Change the signed-in user's password and sign out their other sessions."""
+    from db import get_user_by_id, update_user_password, verify_password
+    from main import SESSION_COOKIE, sign_out_other_sessions
+
+    user_id = get_authenticated_user_id(request)
+    account = get_user_by_id(user_id)
+    body = await request.json()
+    current_password = str(body.get("currentPassword", ""))
+    new_password = str(body.get("newPassword", ""))
+
+    if not verify_password(current_password, account["password_hash"]):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Current password is incorrect",
+        )
+
+    error = password_error(new_password)
+    if error:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error)
+
+    update_user_password(user_id, new_password)
+    sign_out_other_sessions(user_id, request.cookies.get(SESSION_COOKIE))
+    return {"success": True}
 
 
 def _require_project(request: Request, project_id: int) -> int:

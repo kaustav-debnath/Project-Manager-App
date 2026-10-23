@@ -24,7 +24,7 @@ LOGIN_HTML = """<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>OmniRoute — Sign In</title>
+  <title>Project Manager — Sign In</title>
   <style>
     body { font-family: system-ui, sans-serif; background: #032147; color: #fff; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
     .card { background: #131d31; padding: 2rem; border-radius: 12px; border: 1px solid #209dd7; width: 320px; }
@@ -39,26 +39,27 @@ LOGIN_HTML = """<!doctype html>
 <body>
   <div class="card">
     <h1>Sign In</h1>
-    <div id="error" class="error" style="display:none">Invalid username or password</div>
+    <div id="error" class="error" style="display:none">Invalid email or password</div>
     <form id="loginForm">
-      <label>Username</label>
-      <input type="text" name="username" placeholder="user" required autofocus />
+      <label>Email</label>
+      <input type="email" name="email" placeholder="you@example.com" required autofocus />
       <label>Password</label>
-      <input type="password" name="password" placeholder="password" required />
+      <input type="password" name="password" required />
       <button type="submit">Sign In</button>
     </form>
+    <p style="margin-top:1.25rem;text-align:center;font-size:0.875rem;"><a href="/register" style="color:#209dd7;">Create an account</a></p>
   </div>
   <script>
     document.getElementById("loginForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       const formData = new FormData(e.target);
-      const username = formData.get("username");
+      const email = formData.get("email");
       const password = formData.get("password");
       const res = await fetch("/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ email, password }),
       });
       if (res.ok) {
         window.location.href = "/";

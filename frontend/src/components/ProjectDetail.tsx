@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { BoardSelector } from "./BoardSelector";
 import { BoardModal } from "./BoardModal";
-import { LogoutButton } from "./LogoutButton";
+import { Breadcrumbs } from "./Breadcrumbs";
 import { ThemeToggle } from "./ThemeToggle";
+import { UserMenu } from "./UserMenu";
 
 interface Project {
   id: string;
@@ -118,6 +119,7 @@ export function ProjectDetail({
           <div className="flex items-center gap-3">
             <div className="h-8 w-1.5 rounded-full bg-accent-yellow dark:bg-[#ffd600] dark:shadow-[0_0_12px_#ffd600]" />
             <div>
+              <Breadcrumbs items={[{ label: "Projects", href: "/projects" }]} />
               <h1 className="text-2xl font-bold tracking-tight text-dark-navy dark:text-slate-100">
                 {project.title}
               </h1>
@@ -134,8 +136,8 @@ export function ProjectDetail({
             >
               New Board
             </button>
-            <LogoutButton />
             <ThemeToggle />
+            <UserMenu />
           </div>
         </div>
       </header>

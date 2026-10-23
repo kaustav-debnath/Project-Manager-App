@@ -7,36 +7,36 @@ import { ThemeToggle } from "./ThemeToggle";
 export function LoginForm() {
   const { login } = useAuth();
   const [error, setError] = useState("");
-  const usernameRef = React.useRef<HTMLInputElement>(null);
+  const emailRef = React.useRef<HTMLInputElement>(null);
 
   React.useEffect(() => {
-    usernameRef.current?.focus();
+    emailRef.current?.focus();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget as HTMLFormElement);
-    const username = formData.get("username") as string;
+    const email = formData.get("email") as string;
     const password = formData.get("password") as string;
 
-    const success = await login(username, password);
+    const success = await login(email, password);
     if (success) {
       window.location.href = "/";
     } else {
-      setError("Invalid username or password");
+      setError("Invalid email or password");
     }
   };
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center bg-[#032147] text-dark-navy">
+    <div className="relative min-h-screen flex items-center justify-center bg-slate-50 text-dark-navy dark:bg-[#032147]">
       <div className="absolute top-4 right-6">
         <ThemeToggle />
       </div>
       <div className="w-full max-w-md px-6 py-8">
         <div className="flex items-center justify-center gap-2 mb-6">
           <div className="h-8 w-1.5 rounded-full bg-accent-yellow" />
-          <h1 className="text-2xl font-bold tracking-tight text-white">
-            OmniRoute
+          <h1 className="text-2xl font-bold tracking-tight text-dark-navy dark:text-white">
+            Project Manager
           </h1>
         </div>
         <p className="text-gray-text text-sm mb-8">
@@ -44,7 +44,7 @@ export function LoginForm() {
         </p>
 
         {error && (
-          <div className="mb-6 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-600 font-medium">
+          <div role="alert" className="mb-6 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-600 font-medium">
             {error}
           </div>
         )}
@@ -52,19 +52,20 @@ export function LoginForm() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label
-              htmlFor="username"
+              htmlFor="email"
               className="block text-xs font-semibold uppercase tracking-wider text-gray-text mb-1"
             >
-              Username
+              Email
             </label>
             <input
-              ref={usernameRef}
-              id="username"
-              type="text"
-              name="username"
-              placeholder="user"
+              ref={emailRef}
+              id="email"
+              type="email"
+              name="email"
+              placeholder="you@example.com"
+              autoComplete="email"
               required
-              className="w-full rounded-lg border border-slate-200 px-3.5 py-2 text-sm text-white placeholder-slate-400 focus:border-blue-primary focus:outline-hidden focus:ring-2 focus:ring-blue-primary/20"
+              className="w-full rounded-lg border border-slate-200 px-3.5 py-2 text-sm bg-white text-slate-800 placeholder-slate-400 dark:bg-transparent dark:text-white focus:border-blue-primary focus:outline-hidden focus:ring-2 focus:ring-blue-primary/20"
             />
           </div>
           <div>
@@ -78,9 +79,9 @@ export function LoginForm() {
               id="password"
               type="password"
               name="password"
-              placeholder="password"
+              autoComplete="current-password"
               required
-              className="w-full rounded-lg border border-slate-200 px-3.5 py-2 text-sm text-white placeholder-slate-400 focus:border-blue-primary focus:outline-hidden focus:ring-2 focus:ring-blue-primary/20"
+              className="w-full rounded-lg border border-slate-200 px-3.5 py-2 text-sm bg-white text-slate-800 placeholder-slate-400 dark:bg-transparent dark:text-white focus:border-blue-primary focus:outline-hidden focus:ring-2 focus:ring-blue-primary/20"
             />
           </div>
           <button
@@ -91,8 +92,14 @@ export function LoginForm() {
           </button>
         </form>
 
-        <p className="mt-6 text-center text-xs text-gray-text">
-          Demo credentials: user / password
+        <p className="mt-6 text-center text-sm text-gray-text">
+          New here?{" "}
+          <a href="/register" className="font-semibold text-blue-primary hover:underline dark:text-cyan-400">
+            Create an account
+          </a>
+        </p>
+        <p className="mt-3 text-center text-xs text-gray-text">
+          Demo credentials: user@example.com / password
         </p>
       </div>
     </div>

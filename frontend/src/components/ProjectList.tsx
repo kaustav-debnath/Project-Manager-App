@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { ProjectCard } from "./ProjectCard";
 import { ProjectModal } from "./ProjectModal";
-import { LogoutButton } from "./LogoutButton";
 import { ThemeToggle } from "./ThemeToggle";
+import { UserMenu } from "./UserMenu";
 
 interface Project {
   id: string;
@@ -103,8 +103,8 @@ export function ProjectList() {
             >
               New Project
             </button>
-            <LogoutButton />
             <ThemeToggle />
+            <UserMenu />
           </div>
         </div>
       </header>

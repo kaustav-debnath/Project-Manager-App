@@ -2,6 +2,9 @@
 
 import sqlite3
 import os
+import hashlib
+import hmac
+import secrets
 from pathlib import Path
 from typing import Optional, Generator
 import threading
@@ -49,6 +52,8 @@ def init_db() -> None:
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE NOT NULL,
             password_hash TEXT NOT NULL,
+            name TEXT,
+            email TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
 
@@ -95,6 +100,9 @@ def init_db() -> None:
         );
     """)
 
+    # Add profile columns to users and hash any legacy plaintext passwords
+    _migrate_users_profile(cursor)
+
     # Migrate legacy boards schema (user_id only) to the projects model
     _migrate_boards_to_projects(cursor)
 
@@ -107,76 +115,17 @@ def init_db() -> None:
         CREATE INDEX IF NOT EXISTS idx_cards_column_id ON cards(column_id);
     """)
 
-    # Check if we need to seed default data
+    # Seed the demo user and its sample project on a brand-new database
     cursor.execute("SELECT COUNT(*) FROM users")
     user_count = cursor.fetchone()[0]
 
     if user_count == 0:
-        # Seed default user and board data for MVP
         cursor.execute("""
-            INSERT INTO users (username, password_hash)
-            VALUES (?, ?)
-        """, ("user", "password"))  # In real app, this would be hashed
-
-        user_id = cursor.lastrowid
-
-        # Create default project for the user
-        cursor.execute("""
-            INSERT INTO projects (user_id, title, description)
-            VALUES (?, ?, ?)
-        """, (user_id, "My Projects", "Default project created during migration"))
-
-        project_id = cursor.lastrowid
-
-        cursor.execute("""
-            INSERT INTO boards (user_id, project_id, title, position)
+            INSERT INTO users (username, password_hash, name, email)
             VALUES (?, ?, ?, ?)
-        """, (user_id, project_id, "Project Alpha Roadmap", 0))
+        """, ("user", hash_password("password"), "Demo User", "user@example.com"))
 
-        board_id = cursor.lastrowid
-
-        # Seed columns
-        columns_data = [
-            ("Backlog", 0),
-            ("To Do", 1),
-            ("In Progress", 2),
-            ("In Review", 3),
-            ("Done", 4)
-        ]
-
-        for title, position in columns_data:
-            cursor.execute("""
-                INSERT INTO columns (board_id, title, position)
-                VALUES (?, ?, ?)
-            """, (board_id, title, position))
-
-        # Get column IDs for card seeding
-        cursor.execute("SELECT id, title FROM columns WHERE board_id = ? ORDER BY position", (board_id,))
-        column_map = {row[1]: row[0] for row in cursor.fetchall()}
-
-        # Seed default cards (matching frontend dummy data)
-        cards_data = [
-            # Backlog
-            ("Define system metrics", "Establish key performance indicators and alerting thresholds for core microservices.", column_map["Backlog"]),
-            ("User persona research", "Synthesize user interview recordings and update target segment profiles.", column_map["Backlog"]),
-            # To Do
-            ("Design authentication flow", "Map out login, password reset, and session management wireframes.", column_map["To Do"]),
-            ("Configure database migrations", "Set up Alembic migration scripts and verify rollback procedures.", column_map["To Do"]),
-            # In Progress
-            ("Develop Kanban UI", "Build responsive column layouts, card modals, and drag-and-drop interactions.", column_map["In Progress"]),
-            ("API schema definition", "Draft OpenAPI specification endpoints for board management and card updates.", column_map["In Progress"]),
-            # In Review
-            ("Security compliance check", "Audit dependency vulnerabilities and ensure adherence to security standards.", column_map["In Review"]),
-            # Done
-            ("Project kickoff meeting", "Aligned scope, timeline, and deliverables with executive stakeholders.", column_map["Done"]),
-            ("Setup repository structure", "Initialize Next.js frontend and establish testing conventions.", column_map["Done"])
-        ]
-
-        for title, details, column_id in cards_data:
-            cursor.execute("""
-                INSERT INTO cards (column_id, title, details)
-                VALUES (?, ?, ?)
-            """, (column_id, title, details))
+        seed_sample_project(cursor, cursor.lastrowid)
 
     # Slugs backfill after seeding so the seeded project gets one too.
     _migrate_projects_slug(cursor)
@@ -216,15 +165,171 @@ def _migrate_projects_slug(cursor: sqlite3.Cursor) -> None:
         cursor.execute("UPDATE projects SET slug = ? WHERE id = ?", (slug, project["id"]))
 
 
-def get_user_id(username: str) -> int:
-    """Look up user ID by username."""
+def _migrate_users_profile(cursor: sqlite3.Cursor) -> None:
+    """Add users.name and users.email, backfill them, hash legacy passwords, index email.
+
+    Idempotent: safe to run on every startup.
+    """
+    cursor.execute("PRAGMA table_info(users)")
+    columns = [row[1] for row in cursor.fetchall()]
+
+    if "name" not in columns:
+        cursor.execute("ALTER TABLE users ADD COLUMN name TEXT")
+    if "email" not in columns:
+        cursor.execute("ALTER TABLE users ADD COLUMN email TEXT")
+
+    cursor.execute("SELECT id, username, password_hash, name, email FROM users")
+    for user in cursor.fetchall():
+        name = user["name"] or ("Demo User" if user["username"] == "user" else user["username"])
+        email = user["email"] or (
+            user["username"].lower() if "@" in user["username"] else f"{user['username']}@example.com"
+        )
+        password_hash = user["password_hash"]
+        if not password_hash.startswith(HASH_PREFIX):
+            password_hash = hash_password(password_hash)
+
+        if (name, email, password_hash) != (user["name"], user["email"], user["password_hash"]):
+            cursor.execute(
+                "UPDATE users SET name = ?, email = ?, password_hash = ? WHERE id = ?",
+                (name, email, password_hash, user["id"]),
+            )
+
+    cursor.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users(email)")
+
+
+def seed_sample_project(cursor: sqlite3.Cursor, user_id: int) -> None:
+    """Create the sample project, board, five columns and nine cards for a user."""
+    slug = _unique_slug(cursor, _slugify_title("My Projects"))
+    cursor.execute("""
+        INSERT INTO projects (user_id, title, slug, description)
+        VALUES (?, ?, ?, ?)
+    """, (user_id, "My Projects", slug, "Sample project to get you started"))
+    project_id = cursor.lastrowid
+
+    cursor.execute("""
+        INSERT INTO boards (user_id, project_id, title, position)
+        VALUES (?, ?, ?, ?)
+    """, (user_id, project_id, "Project Alpha Roadmap", 0))
+    board_id = cursor.lastrowid
+
+    columns_data = [
+        ("Backlog", 0),
+        ("To Do", 1),
+        ("In Progress", 2),
+        ("In Review", 3),
+        ("Done", 4)
+    ]
+    for title, position in columns_data:
+        cursor.execute("""
+            INSERT INTO columns (board_id, title, position)
+            VALUES (?, ?, ?)
+        """, (board_id, title, position))
+
+    cursor.execute("SELECT id, title FROM columns WHERE board_id = ? ORDER BY position", (board_id,))
+    column_map = {row[1]: row[0] for row in cursor.fetchall()}
+
+    cards_data = [
+        # Backlog
+        ("Define system metrics", "Establish key performance indicators and alerting thresholds for core microservices.", column_map["Backlog"]),
+        ("User persona research", "Synthesize user interview recordings and update target segment profiles.", column_map["Backlog"]),
+        # To Do
+        ("Design authentication flow", "Map out login, password reset, and session management wireframes.", column_map["To Do"]),
+        ("Configure database migrations", "Set up Alembic migration scripts and verify rollback procedures.", column_map["To Do"]),
+        # In Progress
+        ("Develop Kanban UI", "Build responsive column layouts, card modals, and drag-and-drop interactions.", column_map["In Progress"]),
+        ("API schema definition", "Draft OpenAPI specification endpoints for board management and card updates.", column_map["In Progress"]),
+        # In Review
+        ("Security compliance check", "Audit dependency vulnerabilities and ensure adherence to security standards.", column_map["In Review"]),
+        # Done
+        ("Project kickoff meeting", "Aligned scope, timeline, and deliverables with executive stakeholders.", column_map["Done"]),
+        ("Setup repository structure", "Initialize Next.js frontend and establish testing conventions.", column_map["Done"])
+    ]
+    for title, details, column_id in cards_data:
+        cursor.execute("""
+            INSERT INTO cards (column_id, title, details)
+            VALUES (?, ?, ?)
+        """, (column_id, title, details))
+
+
+HASH_PREFIX = "scrypt$"
+_SCRYPT_PARAMS = {"n": 2**14, "r": 8, "p": 1}
+
+
+def hash_password(password: str) -> str:
+    """Hash a password with scrypt and a random salt, format: scrypt$<salt>$<digest>."""
+    salt = secrets.token_bytes(16)
+    digest = hashlib.scrypt(password.encode(), salt=salt, **_SCRYPT_PARAMS)
+    return f"{HASH_PREFIX}{salt.hex()}${digest.hex()}"
+
+
+def verify_password(password: str, stored: str) -> bool:
+    """Check a password against a stored hash in constant time."""
+    if not stored.startswith(HASH_PREFIX):
+        return False
+    salt_hex, digest_hex = stored[len(HASH_PREFIX):].split("$")
+    digest = hashlib.scrypt(password.encode(), salt=bytes.fromhex(salt_hex), **_SCRYPT_PARAMS)
+    return hmac.compare_digest(digest.hex(), digest_hex)
+
+
+def create_user(name: str, email: str, password: str) -> int:
+    """Create a registered user with a sample project, return the new user ID.
+
+    The username mirrors the email for registered users. Raises sqlite3.IntegrityError
+    if the email is already taken.
+    """
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT id FROM users WHERE username = ?", (username,))
-    result = cursor.fetchone()
-    if result:
-        return result[0]
-    raise ValueError(f"User '{username}' not found")
+    try:
+        cursor.execute("""
+            INSERT INTO users (username, password_hash, name, email)
+            VALUES (?, ?, ?, ?)
+        """, (email, hash_password(password), name, email))
+        user_id = cursor.lastrowid
+        seed_sample_project(cursor, user_id)
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    return user_id
+
+
+def get_user_by_id(user_id: int) -> dict | None:
+    """Get a user's id, name, email and password hash by ID."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, name, email, password_hash FROM users WHERE id = ?", (user_id,))
+    row = cursor.fetchone()
+    return dict(row) if row else None
+
+
+def get_user_by_email(email: str) -> dict | None:
+    """Get a user by email (already lowercased by the caller)."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, name, email, password_hash FROM users WHERE email = ?", (email,))
+    row = cursor.fetchone()
+    return dict(row) if row else None
+
+
+def update_user_profile(user_id: int, name: str, email: str) -> None:
+    """Update a user's name and email. The username follows the email."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        UPDATE users SET name = ?, email = ?, username = ? WHERE id = ?
+    """, (name, email, email, user_id))
+    conn.commit()
+
+
+def update_user_password(user_id: int, password: str) -> None:
+    """Store a new hash for the user's password."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "UPDATE users SET password_hash = ? WHERE id = ?",
+        (hash_password(password), user_id),
+    )
+    conn.commit()
 
 
 def get_board_for_user(user_id: int) -> dict:
@@ -669,21 +774,6 @@ def move_card(card_id: int, new_column_id: int, new_position: int) -> None:
     """, (new_column_id, new_position, card_id))
 
     conn.commit()
-
-
-def get_default_user_id() -> int:
-    """Get the ID of the default MVP user ('user')."""
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    cursor.execute("SELECT id FROM users WHERE username = ?", ("user",))
-    result = cursor.fetchone()
-
-    if result:
-        return result[0]
-    else:
-        # Should not happen if init_db was called
-        raise RuntimeError("Default user 'user' not found in database")
 
 
 def _migrate_boards_to_projects(cursor: sqlite3.Cursor) -> None:

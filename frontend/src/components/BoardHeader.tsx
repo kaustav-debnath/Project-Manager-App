@@ -1,10 +1,10 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
 import { useBoard } from "@/context/BoardContext";
-import { LogoutButton } from "./LogoutButton";
+import { Breadcrumbs } from "./Breadcrumbs";
 import { ThemeToggle } from "./ThemeToggle";
+import { UserMenu } from "./UserMenu";
 
 export function BoardHeader({
   projectSlug,
@@ -22,6 +22,7 @@ export function BoardHeader({
           <div className="flex items-center gap-3">
             <div className="h-8 w-1.5 rounded-full bg-accent-yellow dark:bg-[#ffd600] dark:shadow-[0_0_12px_#ffd600]" />
             <div>
+              <Breadcrumbs items={[{ label: "Projects", href: "/projects" }]} />
               <h1 className="text-2xl font-bold tracking-tight text-dark-navy dark:text-slate-100">
                 Board
               </h1>
@@ -31,8 +32,8 @@ export function BoardHeader({
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <LogoutButton />
             <ThemeToggle />
+            <UserMenu />
           </div>
         </div>
       </header>
@@ -41,29 +42,19 @@ export function BoardHeader({
 
   const totalCards = board.columns.reduce((acc, col) => acc + col.cards.length, 0);
 
+  const crumbs = [{ label: "Projects", href: "/projects" }];
+  if (projectSlug) {
+    crumbs.push({ label: projectTitle || "Project", href: `/projects/${projectSlug}` });
+  }
+
   return (
     <header className="border-b border-slate-200 bg-white px-4 py-4 sm:px-6 shadow-xs dark:border-slate-800 dark:bg-[#0c1424] transition-colors">
       <div className="mx-auto flex max-w-7xl flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-center gap-3">
           <div className="h-8 w-1.5 shrink-0 rounded-full bg-accent-yellow dark:bg-[#ffd600] dark:shadow-[0_0_12px_#ffd600]" />
           <div className="min-w-0">
+            <Breadcrumbs items={crumbs} />
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-              {projectSlug ? (
-                <Link
-                  href={`/projects/${projectSlug}`}
-                  className="text-sm font-medium text-blue-primary hover:underline dark:text-cyan-400"
-                >
-                  {projectTitle || "Project"}
-                </Link>
-              ) : (
-                <Link
-                  href="/projects"
-                  className="text-sm font-medium text-blue-primary hover:underline dark:text-cyan-400"
-                >
-                  Projects
-                </Link>
-              )}
-              <span className="text-gray-text dark:text-slate-500">/</span>
               <h1 className="text-2xl font-bold tracking-tight text-dark-navy dark:text-slate-100">
                 {board.title}
               </h1>
@@ -77,8 +68,8 @@ export function BoardHeader({
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <LogoutButton />
           <ThemeToggle />
+          <UserMenu />
         </div>
       </div>
     </header>
