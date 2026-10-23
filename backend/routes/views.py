@@ -24,7 +24,7 @@ LOGIN_HTML = """<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>OmniRoute — Sign In</title>
+  <title>Project Manager — Sign In</title>
   <style>
     body { font-family: system-ui, sans-serif; background: #032147; color: #fff; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
     .card { background: #131d31; padding: 2rem; border-radius: 12px; border: 1px solid #209dd7; width: 320px; }

@@ -6,7 +6,7 @@ import { validateRegistration } from "@/lib/accountValidation";
 import { ThemeToggle } from "./ThemeToggle";
 
 const inputClass =
-  "w-full rounded-lg border border-slate-200 px-3.5 py-2 text-sm text-white placeholder-slate-400 focus:border-blue-primary focus:outline-hidden focus:ring-2 focus:ring-blue-primary/20";
+  "w-full rounded-lg border border-slate-200 px-3.5 py-2 text-sm bg-white text-slate-800 placeholder-slate-400 dark:bg-transparent dark:text-white focus:border-blue-primary focus:outline-hidden focus:ring-2 focus:ring-blue-primary/20";
 const labelClass = "block text-xs font-semibold uppercase tracking-wider text-gray-text mb-1";
 
 export function RegisterForm() {
@@ -48,14 +48,14 @@ export function RegisterForm() {
   };
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center bg-[#032147] text-dark-navy">
+    <div className="relative min-h-screen flex items-center justify-center bg-slate-50 text-dark-navy dark:bg-[#032147]">
       <div className="absolute top-4 right-6">
         <ThemeToggle />
       </div>
       <div className="w-full max-w-md px-6 py-8">
         <div className="flex items-center justify-center gap-2 mb-6">
           <div className="h-8 w-1.5 rounded-full bg-accent-yellow" />
-          <h1 className="text-2xl font-bold tracking-tight text-white">Create your account</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-dark-navy dark:text-white">Create your account</h1>
         </div>
         <p className="text-gray-text text-sm mb-8 text-center">
           Start with a sample project and make it your own
@@ -91,7 +91,7 @@ export function RegisterForm() {
 
         <p className="mt-6 text-center text-sm text-gray-text">
           Already have an account?{" "}
-          <a href="/login" className="font-semibold text-cyan-400 hover:underline">
+          <a href="/login" className="font-semibold text-blue-primary hover:underline dark:text-cyan-400">
             Sign in
           </a>
         </p>

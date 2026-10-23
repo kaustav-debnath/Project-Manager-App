@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { validateEmail, validateName, validatePassword } from "@/lib/accountValidation";
+import { Breadcrumbs } from "./Breadcrumbs";
 import { ThemeToggle } from "./ThemeToggle";
 import { UserMenu } from "./UserMenu";
 
@@ -118,9 +119,7 @@ export function ProfilePage() {
           <div className="flex items-center gap-3">
             <div className="h-8 w-1.5 rounded-full bg-accent-yellow dark:bg-[#ffd600] dark:shadow-[0_0_12px_#ffd600]" />
             <div>
-              <a href="/projects" className="text-sm font-medium text-blue-primary hover:underline dark:text-cyan-400">
-                Projects
-              </a>
+              <Breadcrumbs items={[{ label: "Projects", href: "/projects" }]} />
               <h1 className="text-2xl font-bold tracking-tight text-dark-navy dark:text-slate-100">Profile</h1>
             </div>
           </div>
