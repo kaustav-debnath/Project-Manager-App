@@ -31,9 +31,10 @@ COPY backend/ /app/
 # Copy static frontend build from builder stage
 COPY --from=frontend-builder /app/frontend/out /app/frontend/out
 
-# Configure static directory and virtualenv path
+# Configure static directory, virtualenv path, and database path on the persistent disk mount
 ENV STATIC_DIR="/app/frontend/out"
 ENV PATH="/app/.venv/bin:$PATH"
+ENV DB_PATH="/data/omniroute.db"
 
 EXPOSE 8000
 
